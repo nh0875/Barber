@@ -15,7 +15,7 @@ async function bootstrap() {
 
   // Configuramos CORS (Vital para entorno web externo Next.js en el mismo dispositivo o distinto localhost port)
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: true, // Automáticamente permite el origen de la petición (soluciona problemas de Vercel/Render)
     credentials: true,
   });
 
