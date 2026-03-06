@@ -1,7 +1,7 @@
 // src/cuts/cuts.controller.ts
-import { Controller, Post, Param, Body, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Param, Body, Get, Query, Patch, UseGuards } from '@nestjs/common';
 import { CutsService } from './cuts.service';
-import { CreateCheckinDto, PayCutDto } from './dto/cut.dto';
+import { CreateCheckinDto, PayCutDto, UpdateCutDto } from './dto/cut.dto';
 
 @Controller('cuts')
 // @UseGuards(JwtAuthGuard) 
@@ -26,6 +26,11 @@ export class CutsController {
   @Post(':id/pay')
   pay(@Param('id') id: string, @Body() body: PayCutDto) {
     return this.cutsService.pay(id, body.method, body.amount);
+  }
+
+  @Patch(':id')
+  updateCut(@Param('id') id: string, @Body() body: UpdateCutDto) {
+    return this.cutsService.updateCut(id, body);
   }
 
   @Get('board')

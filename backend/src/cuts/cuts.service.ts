@@ -13,14 +13,14 @@ export class CutsService {
     private realtime: RealtimeService,
   ) {}
 
-  async checkin(clientId: string, serviceId: string, barberId: string) {
-    const serviceInfo = await this.prisma.service.findUnique({ where: { id: serviceId } });
+async checkin(clientId: string, serviceId: string, barberId?: string) {        
+    const serviceInfo = await this.prisma.service.findUnique({ where: { id: serviceId } });                                                                         
     if (!serviceInfo) throw new NotFoundException('Service not found');
 
     const cut = await this.prisma.cut.create({
       data: {
         client_id: clientId,
-        barber_id: barberId,
+        barber_id: barberId || null,
         service_id: serviceId,
         status: CutStatus.WAITING,
         price_snapshot: serviceInfo.base_price,
@@ -101,6 +101,28 @@ export class CutsService {
     this.realtime.emit('PAYMENT_CREATED', result);
     this.realtime.emit('CUT_UPDATED', result);
     return result;
+  }
+
+  async updateCut(cutId: string, data: { status?: string, barberId?: string, serviceId?: string }) {
+    const cut = await this.prisma.cut.findUnique({ where: { id: cutId } });
+    if (!cut) throw new NotFoundException('Cut not found');
+
+    if (data.status && data.status !== CutStatus.PAID && cut.status === CutStatus.PAID) {
+      await this.prisma.payment.deleteMany({ where: { cut_id: cutId } });
+    }
+
+    const updated = await this.prisma.cut.update({
+      where: { id: cutId },
+      data: {
+        ...(data.status ? { status: data.status, paid_at: data.status === CutStatus.PAID ? new Date() : null } : {}),
+        ...(data.barberId !== undefined ? { barber_id: data.barberId || null } : {}),
+        ...(data.serviceId ? { service_id: data.serviceId } : {}),
+      },
+      include: { client: true, barber: true, service: true, payment: true },
+    });
+
+    this.realtime.emit('CUT_UPDATED', updated);
+    return updated;
   }
 
   async getBoard(barberId?: string) {

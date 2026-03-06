@@ -38,14 +38,13 @@ export default function QuickCheckinModal({ onClose }: { onClose: () => void }) 
     }
   });
 
-  // Cargar barberos si es admin
+  // Cargar barberos
   const { data: barbers } = useQuery({
     queryKey: ['barbers-list-modal'],
     queryFn: async () => {
       const res = await axios.get(`${API_URL}/barbers`);
       return res.data;
-    },
-    enabled: user?.role === 'ADMIN'
+    }
   });
 
   const checkinMutation = useMutation({
@@ -62,7 +61,7 @@ export default function QuickCheckinModal({ onClose }: { onClose: () => void }) 
       return axios.post(`${API_URL}/cuts/checkin`, {
         clientId,
         serviceId: forcedService, 
-        barberId: selectedBarber,
+        barberId: selectedBarber || undefined,
       });
     },
     onSuccess: () => {
@@ -128,29 +127,27 @@ export default function QuickCheckinModal({ onClose }: { onClose: () => void }) 
              </select>
           </div>
 
-          {user?.role === 'ADMIN' && (
-             <div>
-               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Barbero</label>
-               <select 
-                 value={selectedBarber}
-                 onChange={(e) => setSelectedBarber(e.target.value)}
-                 className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg py-2 px-4 focus:ring-2 focus:ring-emerald-500 outline-none"
-               >
-                  <option value="" disabled>Seleccione barbero...</option>
-                  {barbers?.map((b: any) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-               </select>
-             </div>
-          )}
+          <div>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Barbero</label>
+            <select
+              value={selectedBarber}
+              onChange={(e) => setSelectedBarber(e.target.value)}
+              className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg py-2 px-4 focus:ring-2 focus:ring-emerald-500 outline-none"
+            >
+              <option value="">Cualquiera</option>
+              {barbers?.map((b: any) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
 
           <div className="pt-4 mt-4 border-t border-zinc-800 flex justify-end gap-3">
             <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">
               Cancelar
             </button>
-            <button 
+            <button
               onClick={() => checkinMutation.mutate()}
-              disabled={checkinMutation.isPending || !phone || !selectedBarber}
+              disabled={checkinMutation.isPending || !phone}
               className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               Confirmar Ingreso

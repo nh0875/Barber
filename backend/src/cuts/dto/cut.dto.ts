@@ -8,8 +8,23 @@ export class CreateCheckinDto {
   @IsString()
   serviceId: string;
 
+  @IsOptional()
   @IsString()
-  barberId: string;
+  barberId?: string;
+}
+
+export class UpdateCutDto {
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  barberId?: string;
+
+  @IsOptional()
+  @IsString()
+  serviceId?: string;
 }
 
 export class PayCutDto {

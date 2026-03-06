@@ -49,7 +49,7 @@ model Service {
 model Cut {
   id             String    @id @default(uuid())
   client_id      String
-  barber_id      String
+  barber_id      String?
   service_id     String
   status         String    // "WAITING" | "IN_PROGRESS" | "FINISHED" | "PAID" | "SIN_COBRO" | "CANCELLED"
   price_snapshot Float
@@ -60,7 +60,7 @@ model Cut {
   updated_at     DateTime  @updatedAt
 
   client         Client    @relation(fields: [client_id], references: [id])
-  barber         User      @relation("BarberCuts", fields: [barber_id], references: [id])
+  barber         User?     @relation("BarberCuts", fields: [barber_id], references: [id])
   service        Service   @relation(fields: [service_id], references: [id])
   payment        Payment?
 

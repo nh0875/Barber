@@ -2,7 +2,10 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Play, CheckCircle, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { Play, CheckCircle, DollarSign, Clock, AlertTriangle, MoreVertical } from 'lucide-react';
+import { useAuthStore } from '../../../lib/store/useAuthStore';
+import { useState } from 'react';
+import EditCutModal from './EditCutModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -13,6 +16,8 @@ interface CutCardProps {
 
 export default function CutCard({ cut, hideActions }: CutCardProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const [isEditing, setIsEditing] = useState(false);
 
   // Mutation Optimizada
   const updateCutStatus = useMutation({
@@ -34,9 +39,19 @@ export default function CutCard({ cut, hideActions }: CutCardProps) {
   };
 
   return (
-    <div className="bg-zinc-800 p-3 md:p-4 rounded-xl border border-zinc-700/50 hover:border-zinc-600 transition-colors shadow-sm group flex flex-col">
+    <>
+    <div className="bg-zinc-800 p-3 md:p-4 rounded-xl border border-zinc-700/50 hover:border-zinc-600 transition-colors shadow-sm group flex flex-col relative">
+      {user?.role === 'ADMIN' && (
+        <button 
+          onClick={() => setIsEditing(true)}
+          className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          aria-label="Editar"
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
+      )}
       <div className="flex justify-between items-start mb-1 md:mb-2">
-        <h3 className="font-semibold text-zinc-100 text-sm md:text-base truncate pr-2">{cut.client?.full_name}</h3>
+        <h3 className="font-semibold text-zinc-100 text-sm md:text-base truncate pr-6">{cut.client?.full_name}</h3>
         {cut.status === 'SIN_COBRO' && (
           <span className="text-[10px] bg-red-950 text-red-400 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium border border-red-900/50">
             <AlertTriangle className="w-3 h-3" />
@@ -99,5 +114,9 @@ export default function CutCard({ cut, hideActions }: CutCardProps) {
         </div>
       )}
     </div>
+    {isEditing && (
+      <EditCutModal cut={cut} onClose={() => setIsEditing(false)} />
+    )}
+    </>
   );
 }
