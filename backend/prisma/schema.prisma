@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  role          String   // "ADMIN" | "BARBER"
+  name          String
+  username      String   @unique
+  password_hash String
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  cuts          Cut[]    @relation("BarberCuts")
+
+  @@map("users")
+}
+
+model Client {
+  id         String   @id @default(uuid())
+  full_name  String
+  phone      String   @unique
+  created_at DateTime @default(now())
+
+  cuts       Cut[]
+
+  @@index([full_name])
+  @@map("clients")
+}
+
+model Service {
+  id                    String   @id @default(uuid())
+  name                  String
+  base_price            Float
+  expected_duration_min Int?
+  is_active             Boolean  @default(true)
+  created_at            DateTime @default(now())
+
+  cuts                  Cut[]
+
+  @@map("services")
+}
+
+model Cut {
+  id             String    @id @default(uuid())
+  client_id      String
+  barber_id      String
+  service_id     String
+  status         String    // "WAITING" | "IN_PROGRESS" | "FINISHED" | "PAID" | "SIN_COBRO" | "CANCELLED"
+  price_snapshot Float
+  created_at     DateTime  @default(now())
+  started_at     DateTime?
+  finished_at    DateTime?
+  paid_at        DateTime?
+  updated_at     DateTime  @updatedAt
+
+  client         Client    @relation(fields: [client_id], references: [id])
+  barber         User      @relation("BarberCuts", fields: [barber_id], references: [id])
+  service        Service   @relation(fields: [service_id], references: [id])
+  payment        Payment?
+
+  @@index([status, created_at])
+  @@index([barber_id, created_at])
+  @@index([client_id, created_at(sort: Desc)])
+  @@index([finished_at])
+  @@map("cuts")
+}
+
+model Payment {
+  id         String   @id @default(uuid())
+  cut_id     String   @unique
+  method     String   // "CASH" | "TRANSFER" | "CARD"
+  amount     Float
+  created_at DateTime @default(now())
+
+  cut        Cut      @relation(fields: [cut_id], references: [id])
+
+  @@map("payments")
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  description String   // "Crema", "Mantenimiento", "Alquiler"
+  amount      Float
+  category    String   // "SUPPLY", "TAX", "RENT", "OTHER"
+  date        DateTime @default(now())
+
+  @@map("expenses")
+}
